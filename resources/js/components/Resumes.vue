@@ -108,7 +108,7 @@
             :disabled="currentPage === 1"
             class="px-3 py-1 text-gray-600 hover:text-emerald-600 disabled:text-gray-400"
           >
-            &lt;
+            <
           </button>
           <button 
             v-for="page in totalPages" 
@@ -128,8 +128,43 @@
             :disabled="currentPage === totalPages"
             class="px-3 py-1 text-gray-600 hover:text-emerald-600 disabled:text-gray-400"
           >
-            &gt;
+            >
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Notification -->
+    <div 
+      v-if="showSuccess" 
+      class="fixed bottom-0 inset-x-0 pb-2 sm:pb-5"
+    >
+      <div class="max-w-md mx-auto px-2 sm:px-4">
+        <div class="p-2 rounded-lg bg-emerald-600 shadow-lg sm:p-3">
+          <div class="flex items-center justify-between flex-wrap">
+            <div class="w-0 flex-1 flex items-center">
+              <span class="flex p-2 rounded-lg bg-emerald-800">
+                <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </span>
+              <p class="ml-3 font-medium text-white truncate">
+                <span>Resume deleted successfully!</span>
+              </p>
+            </div>
+            <div class="order-2 flex-shrink-0 sm:order-3 sm:ml-2">
+              <button 
+                type="button" 
+                @click="showSuccess = false"
+                class="-mr-1 flex p-2 rounded-md hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-white"
+              >
+                <span class="sr-only">Dismiss</span>
+                <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -139,19 +174,23 @@
 <script>
 import axios from 'axios';
 import { useRoute } from 'vue-router';
+import { inject } from 'vue';
 
 export default {
   name: 'Resumes',
+  setup() {
+    const showAlert = inject('showAlert');
+    return { showAlert };
+  },
   data() {
     return { 
       resumes: [],
       loading: true,
       searchQuery: '',
-      showDeleteModal: false,
-      resumeToDelete: null,
       cameFromInternalNavigation: false,
       currentPage: 1,
-      itemsPerPage: 10
+      itemsPerPage: 10,
+      showSuccess: false
     };
   },
   computed: {
@@ -209,6 +248,12 @@ export default {
         this.resumes = res.data;
       } catch (error) {
         console.error('Error fetching resumes:', error);
+        this.showAlert({
+          type: 'error',
+          title: 'Fetch Error',
+          message: 'Failed to fetch your resumes. Please try again.',
+          autoDismiss: true
+        });
       } finally {
         this.loading = false;
       }
@@ -218,9 +263,14 @@ export default {
       return new Date(dateString).toLocaleDateString(undefined, options);
     },
     confirmDelete(id) {
-      if (confirm('Are you sure you want to delete this resume? This action cannot be undone.')) {
-        this.deleteResume(id);
-      }
+      const resume = this.resumes.find(r => r.id === id);
+      this.showAlert({
+        type: 'warning',
+        title: 'Confirm Deletion',
+        message: `Are you sure you want to delete "${resume.title}"? This action cannot be undone.`,
+        isConfirmation: true,
+        onConfirm: () => this.deleteResume(id)
+      });
     },
     async deleteResume(id) {
       try {
@@ -228,8 +278,18 @@ export default {
           headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
         });
         this.resumes = this.resumes.filter(r => r.id !== id);
+        this.showSuccess = true;
+        setTimeout(() => {
+          this.showSuccess = false;
+        }, 5000);
       } catch (error) {
         console.error('Error deleting resume:', error);
+        this.showAlert({
+          type: 'error',
+          title: 'Deletion Failed',
+          message: 'There was an error deleting the resume. Please try again.',
+          autoDismiss: true
+        });
       }
     }
   }

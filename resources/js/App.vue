@@ -10,10 +10,8 @@
     </div>
     <Footer :compact="isAuthenticated" />
     
-    <!-- Onboarding Modal -->
     <OnboardingModal v-if="isAuthenticated" @completed="onboardingCompleted" />
     
-    <!-- Feedback Button (Only show when logged in) -->
     <button
       v-if="isAuthenticated"
       @click="openFeedbackModal"
@@ -25,10 +23,8 @@
       </svg>
     </button>
 
-    <!-- Feedback Modal -->
     <FeedbackModal ref="feedbackModal" @feedback-success="showFeedbackSuccessNotification" />
 
-    <!-- Notification -->
     <div
       v-if="showNotification"
       class="fixed bottom-20 right-5 bg-emerald-600 text-white p-3 rounded-md shadow-md transition-opacity duration-300"
@@ -36,15 +32,16 @@
       {{ notificationMessage }}
     </div>
 
-    <!-- Add this to the template, before the closing </div> -->
     <ModalAlert 
       :show="showModalAlert" 
       :title="modalAlertData.title" 
       :message="modalAlertData.message" 
       :type="modalAlertData.type"
       :autoDismiss="modalAlertData.autoDismiss"
+      :isConfirmation="modalAlertData.isConfirmation"
       @close="showModalAlert = false"
-    />
+      @confirm="handleConfirm" 
+    </ModalAlert> 
   </div>
 </template>
 
@@ -53,9 +50,8 @@ import NavBar from './components/NavBar.vue';
 import Footer from './components/Footer.vue';
 import FeedbackModal from './components/FeedbackModal.vue';
 import OnboardingModal from './components/OnboardingModal.vue';
-import { onMounted, ref, provide } from 'vue';
-// Add to imports
 import ModalAlert from './components/ModalAlert.vue';
+import { onMounted, ref, provide } from 'vue';
 
 export default {
   components: { 
@@ -66,42 +62,33 @@ export default {
     ModalAlert
   },
   setup() {
-    // Use ref instead of computed to allow manual updates
     const isAuthenticated = ref(!!localStorage.getItem('auth_token'));
-    
-    // Global state for user data
     const userData = ref(null);
     const userDataLoading = ref(false);
-    
-    // Feedback modal and notification refs
     const feedbackModal = ref(null);
     const showNotification = ref(false);
     const notificationMessage = ref('');
-
-    // Add to setup()
     const showModalAlert = ref(false);
     const modalAlertData = ref({
       type: 'info',
       title: '',
       message: '',
-      autoDismiss: false
+      autoDismiss: false,
+      isConfirmation: false,
+      onConfirm: null // Store the callback
     });
-    
-    // Provide user data to child components
+
     provide('userData', userData);
     provide('userDataLoading', userDataLoading);
-    
-    // Method to update auth state from NavBar
+
     const updateAuthState = (authState) => {
       isAuthenticated.value = authState;
     };
-    
-    // Method to open feedback modal
+
     const openFeedbackModal = () => {
       feedbackModal.value.openModal();
     };
-    
-    // Method to show success notification
+
     const showFeedbackSuccessNotification = () => {
       notificationMessage.value = 'Thank you for your feedback! We appreciate it.';
       showNotification.value = true;
@@ -109,8 +96,7 @@ export default {
         showNotification.value = false;
       }, 3000);
     };
-    
-    // Method to handle onboarding completion
+
     const onboardingCompleted = () => {
       showNotification.value = true;
       notificationMessage.value = 'Thanks for completing the onboarding survey!';
@@ -119,39 +105,39 @@ export default {
       }, 3000);
     };
 
-    // Add this method to setup()
     const showAlert = (data) => {
       modalAlertData.value = {
         type: data.type || 'info',
         title: data.title || 'Notification',
         message: data.message || '',
-        autoDismiss: data.autoDismiss !== undefined ? data.autoDismiss : true
+        autoDismiss: data.autoDismiss !== undefined ? data.autoDismiss : true,
+        isConfirmation: data.isConfirmation || false,
+        onConfirm: data.onConfirm || null // Store the callback
       };
       showModalAlert.value = true;
     };
 
-    // Add to provide
+    const handleConfirm = () => {
+      if (modalAlertData.value.onConfirm) {
+        modalAlertData.value.onConfirm(); // Execute the stored callback
+      }
+    };
+
     provide('showAlert', showAlert);
-    
+
     onMounted(() => {
-      // Listen for storage events from other tabs
       window.addEventListener('storage', () => {
         isAuthenticated.value = !!localStorage.getItem('auth_token');
       });
-      
-      // Listen for custom auth events
       window.addEventListener('login', () => {
         isAuthenticated.value = true;
       });
-      
       window.addEventListener('logout', () => {
         isAuthenticated.value = false;
       });
-      
-      // Check auth state on mount
       isAuthenticated.value = !!localStorage.getItem('auth_token');
     });
-    
+
     return {
       isAuthenticated,
       updateAuthState,
@@ -160,11 +146,12 @@ export default {
       showFeedbackSuccessNotification,
       showNotification,
       notificationMessage,
-      onboardingCompleted, 
+      onboardingCompleted,
       showModalAlert,
       modalAlertData,
-      showAlert
+      showAlert,
+      handleConfirm
     };
   }
-}
+};
 </script>

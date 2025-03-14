@@ -20,22 +20,15 @@
         <div class="flex items-start">
           <!-- Icon -->
           <div v-if="type" class="flex-shrink-0 mr-3">
-            <!-- Success Icon -->
             <svg v-if="type === 'success'" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
-            
-            <!-- Error Icon -->
             <svg v-else-if="type === 'error'" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            
-            <!-- Info Icon -->
             <svg v-else-if="type === 'info'" class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            
-            <!-- Warning Icon -->
             <svg v-else-if="type === 'warning'" class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
@@ -49,13 +42,20 @@
       </div>
       
       <!-- Footer -->
-      <div class="px-6 py-3 bg-gray-50 border-t flex justify-end">
+      <div class="px-6 py-3 bg-gray-50 border-t flex justify-end space-x-3">
         <button 
-          @click="closeModal" 
+          v-if="isConfirmation"
+          @click="cancel"
+          class="px-4 py-2 rounded-md text-gray-700 bg-gray-200 hover:bg-gray-300 font-medium focus:outline-none"
+        >
+          No
+        </button>
+        <button 
+          @click="confirm"
           class="px-4 py-2 rounded-md text-white font-medium focus:outline-none"
           :class="typeClasses.button"
         >
-          {{ buttonText }}
+          {{ isConfirmation ? 'Yes' : buttonText }}
         </button>
       </div>
     </div>
@@ -94,6 +94,10 @@ export default {
     dismissTimeout: {
       type: Number,
       default: 3000
+    },
+    isConfirmation: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
@@ -116,7 +120,6 @@ export default {
           button: 'bg-yellow-600 hover:bg-yellow-700'
         }
       };
-      
       return classes[this.type] || classes.info;
     }
   },
@@ -124,8 +127,17 @@ export default {
     closeModal() {
       this.$emit('close');
     },
+    confirm() {
+      if (this.isConfirmation) {
+        this.$emit('confirm');
+      }
+      this.closeModal();
+    },
+    cancel() {
+      this.closeModal();
+    },
     startAutoDismissTimer() {
-      if (this.autoDismiss) {
+      if (this.autoDismiss && !this.isConfirmation) {
         setTimeout(() => {
           this.closeModal();
         }, this.dismissTimeout);
@@ -144,5 +156,5 @@ export default {
       this.startAutoDismissTimer();
     }
   }
-}
+};
 </script>

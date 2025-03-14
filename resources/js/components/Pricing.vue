@@ -24,7 +24,7 @@
               <span class="ml-1 text-xl font-semibold text-emerald-50">to start</span>
             </div>
             <p class="mt-5 text-lg text-center text-emerald-50">
-              Your first 2 tailored resumes are on us
+              Your first tailored resume is on us
             </p>
           </div>
           <div class="px-6 pt-6 pb-8 bg-white sm:p-10">
@@ -36,7 +36,7 @@
                   </svg>
                 </div>
                 <p class="ml-3 text-base text-gray-700">
-                  First 2 tailored resumes + cover letters: <span class="font-medium">Free</span>
+                  First tailored resume + cover letter: <span class="font-medium">Free</span>
                 </p>
               </li>
               <li class="flex items-start">
@@ -100,10 +100,10 @@
         
         <div class="space-y-6 bg-white rounded-xl shadow-sm p-6">
           <div class="border-b border-gray-100 pb-6">
-            <h3 class="text-lg font-medium text-emerald-600">Are the first 2 resumes really free?</h3>
+            <h3 class="text-lg font-medium text-emerald-600">Is the first resume really free?</h3>
             <div class="mt-3">
               <p class="text-gray-700">
-                Yes, your first 2 tailored resumes and cover letters are completely free! We want you to experience the value of our service before you decide to purchase more.
+                Yes, your first tailored resume and cover letter are completely free! We want you to experience the value of our service before you decide to purchase more.
               </p>
             </div>
           </div>
